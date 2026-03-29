@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elective Courses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F2ED;
+    --surface: #FAFAF8;
+    --border: rgba(30,58,95,0.12);
+    --border-strong: rgba(30,58,95,0.22);
+    --ink: #1A1A18;
+    --ink-2: #555550;
+    --ink-3: #999993;
+    --accent: #1E3A5F;
+    --accent-light: #E6EEF7;
+    --accent-mid: #378ADD;
+    --tag-bg: #E8F0F8;
+    --tag-fg: #185FA5;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 3rem 2rem 2rem;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; }
+  header .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+  }
+  header h1 strong { font-weight: 500; }
+  header p {
+    color: rgba(255,255,255,0.65);
+    font-size: 14px;
+    max-width: 520px;
+    font-weight: 300;
+  }
+
+  .toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .toolbar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+    max-width: 320px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    stroke: var(--ink-3);
+    fill: none;
+    pointer-events: none;
+  }
+  #search {
+    width: 100%;
+    padding: 7px 12px 7px 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--bg);
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  #search:focus { border-color: var(--accent-mid); }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    padding: 5px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .count-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .card:hover { border-color: var(--accent-mid); transform: translateY(-1px); }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+  }
+  .card-credits {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .card h2 {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .meta-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--bg);
+    font-family: var(--sans);
+  }
+  .meta-pill svg { width: 11px; height: 11px; stroke: var(--ink-3); fill: none; flex-shrink: 0; }
+  .card-desc {
+    font-size: 13px;
+    color: var(--ink-2);
+    font-weight: 300;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    background: var(--tag-bg);
+    color: var(--tag-fg);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(20,30,50,0.45);
+    z-index: 200;
+    padding: 2rem;
+    overflow-y: auto;
+    align-items: flex-start;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 580px;
+    margin: auto;
+    padding: 2rem;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ink-2);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .modal-close:hover { background: #e0ddd6; }
+  .modal-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.35rem;
+  }
+  .modal h2 {
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-bottom: 1rem;
+  }
+  .modal-credits {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 100px;
+    margin-bottom: 1rem;
+  }
+  .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+  }
+  .modal-field label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--ink-3);
+    display: block;
+    margin-bottom: 2px;
+    letter-spacing: 0.05em;
+  }
+  .modal-field span {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .modal-desc {
+    font-size: 14px;
+    color: var(--ink-2);
+    font-weight: 300;
+    line-height: 1.65;
+    margin-bottom: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .modal-prereq {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-bottom: 0.75rem;
+  }
+  .modal-prereq strong { color: var(--ink); font-weight: 500; font-size: 12px; }
+
+  .empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--ink-3);
+    font-size: 14px;
+  }
+  .empty svg { width: 36px; height: 36px; stroke: var(--ink-3); fill: none; margin-bottom: 1rem; display: block; margin-inline: auto; }
+
+  .loading {
+    text-align: center;
+    padding: 4rem;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .error-banner {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    margin-bottom: 1.5rem;
+    display: none;
+  }
+  .error-banner a { color: inherit; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="eyebrow">Gymnasium · Academic Programme</p>
+    <h1>Elective <strong>Courses</strong></h1>
+    <p>Browse and explore optional engineering and science electives available this term.</p>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="search" placeholder="Search courses, teachers, tags…">
+    </div>
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-cat="all">All</button>
+    </div>
+    <span class="count-badge" id="count"></span>
+  </div>
+</div>
+
+<main>
+  <div class="error-banner" id="error-banner">
+    Could not load course data. Check the <code>SHEET_CSV_URL</code> in the script, or open the browser console for details.
+  </div>
+  <div id="grid"><div class="loading">Loading courses…</div></div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modal-close">×</button>
+    <p class="modal-eyebrow" id="m-code"></p>
+    <h2 id="m-name"></h2>
+    <span class="modal-credits" id="m-credits"></span>
+    <div class="modal-grid">
+      <div class="modal-field"><label>Teacher</label><span id="m-teacher"></span></div>
+      <div class="modal-field"><label>Category</label><span id="m-category"></span></div>
+      <div class="modal-field"><label>Day & time</label><span id="m-time"></span></div>
+      <div class="modal-field"><label>Room</label><span id="m-room"></span></div>
+      <div class="modal-field"><label>Max students</label><span id="m-max"></span></div>
+    </div>
+    <p class="modal-desc" id="m-desc"></p>
+    <p class="modal-prereq" id="m-prereq"></p>
+    <div class="card-tags" id="m-tags"></div>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIGURE THIS ────────────────────────────────────────────────────────
+  // Paste your Google Sheets "Publish to web → CSV" URL here:
+  const SHEET_CSV_URL = 'YOUR_GOOGLE_SHEETS_CSV_URL_HERE';
+  // ──────────────────────────────────────────────────────────────────────────
+
+  let allCourses = [];
+  let activeCategory = 'all';
+  let searchQuery = '';
+
+  function parseCSV(text) {
+    const rows = [];
+    const lines = text.split(/\r?\n/);
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      const vals = lines[i].match(/(".*?"|[^,]+|(?<=,)(?=,)|(?<=,)$|^(?=,))/g) || [];
+      const row = {};
+      headers.forEach((h, idx) => {
+        row[h] = (vals[idx] || '').replace(/^"|"$/g, '').trim();
+      });
+      if (row.name) rows.push(row);
+    }
+    return rows;
+  }
+
+  function buildFilters(courses) {
+    const cats = [...new Set(courses.map(c => c.category).filter(Boolean))].sort();
+    const filters = document.getElementById('filters');
+    filters.innerHTML = '<button class="filter-btn active" data-cat="all">All</button>';
+    cats.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.cat = cat;
+      btn.textContent = cat;
+      filters.appendChild(btn);
+    });
+    filters.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      activeCategory = btn.dataset.cat;
+      filters.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      render();
+    });
+  }
+
+  function filtered() {
+    const q = searchQuery.toLowerCase();
+    return allCourses.filter(c => {
+      if (activeCategory !== 'all' && c.category !== activeCategory) return false;
+      if (!q) return true;
+      return [c.name, c.code, c.teacher, c.description, c.tags, c.category]
+        .some(f => (f || '').toLowerCase().includes(q));
+    });
+  }
+
+  const iconTeacher = `<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+  const iconTime = `<svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  const iconRoom = `<svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+
+  function render() {
+    const courses = filtered();
+    const grid = document.getElementById('grid');
+    document.getElementById('count').textContent = courses.length + ' course' + (courses.length !== 1 ? 's' : '');
+
+    if (courses.length === 0) {
+      grid.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>No courses match your search.</div>`;
+      return;
+    }
+
+    grid.innerHTML = courses.map((c, i) => {
+      const tags = (c.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+      const timeStr = [c.day, c.time].filter(Boolean).join(' · ');
+      return `
+        <div class="card" data-idx="${i}" tabindex="0">
+          <div class="card-top">
+            <span class="card-code">${c.code || '—'}</span>
+            ${c.credits ? `<span class="card-credits">${c.credits} cr</span>` : ''}
+          </div>
+          <h2>${c.name}</h2>
+          <div class="card-meta">
+            ${c.teacher ? `<span class="meta-pill">${iconTeacher}${c.teacher}</span>` : ''}
+            ${timeStr ? `<span class="meta-pill">${iconTime}${timeStr}</span>` : ''}
+            ${c.room ? `<span class="meta-pill">${iconRoom}${c.room}</span>` : ''}
+          </div>
+          ${c.description ? `<p class="card-desc">${c.description}</p>` : ''}
+          ${tags.length ? `<div class="card-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => openModal(filtered()[+card.dataset.idx]));
+      card.addEventListener('keydown', e => { if (e.key === 'Enter') openModal(filtered()[+card.dataset.idx]); });
+    });
+  }
+
+  function openModal(c) {
+    const timeStr = [c.day, c.time].filter(Boolean).join(', ');
+    document.getElementById('m-code').textContent = c.code || '';
+    document.getElementById('m-name').textContent = c.name;
+    document.getElementById('m-credits').textContent = c.credits ? c.credits + ' credits' : '';
+    document.getElementById('m-teacher').textContent = c.teacher || '—';
+    document.getElementById('m-category').textContent = c.category || '—';
+    document.getElementById('m-time').textContent = timeStr || '—';
+    document.getElementById('m-room').textContent = c.room || '—';
+    document.getElementById('m-max').textContent = c.max_students || '—';
+    document.getElementById('m-desc').textContent = c.description || '';
+    const prereq = document.getElementById('m-prereq');
+    prereq.innerHTML = c.prerequisites ? `<strong>Prerequisites:</strong> ${c.prerequisites}` : '';
+    const tags = (c.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+    document.getElementById('m-tags').innerHTML = tags.map(t => `<span class="tag">${t}</span>`).join('');
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  document.getElementById('modal-close').addEventListener('click', () =>
+    document.getElementById('modal-overlay').classList.remove('open'));
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay'))
+      document.getElementById('modal-overlay').classList.remove('open');
+  });
+
+  document.getElementById('search').addEventListener('input', e => {
+    searchQuery = e.target.value;
+    render();
+  });
+
+  async function loadData() {
+    if (!SHEET_CSV_URL || SHEET_CSV_URL.includes('YOUR_GOOGLE')) {
+      document.getElementById('grid').innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Set <code>SHEET_CSV_URL</code> in the script to load courses from Google Sheets.</div>`;
+      document.getElementById('count').textContent = '';
+      return;
+    }
+    try {
+      const res = await fetch(SHEET_CSV_URL);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      allCourses = parseCSV(text);
+      buildFilters(allCourses);
+      render();
+    } catch (err) {
+      console.error('Course load error:', err);
+      document.getElementById('error-banner').style.display = 'block';
+      document.getElementById('grid').innerHTML = '';
+    }
+  }
+
+  loadData();
+</script>
+</body>
+</html>
