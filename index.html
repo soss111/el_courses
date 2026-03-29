@@ -155,7 +155,7 @@ function parseCSV(text) {
     }
     r.push(cur.trim()); return r;
   }
-  const headers = split(lines[0]).map(h => h.toLowerCase().trim());
+  const headers = split(lines[0]).map(h => h.toLowerCase().trim().replace(/^\uFEFF/, "").replace(/^\xEF\xBB\xBF/, ""));
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
@@ -305,7 +305,7 @@ async function openModal(c) {
     const text = await fetchCSV(gid);
     console.log('Raw CSV (first 500 chars):', text.substring(0, 500));
     const rows = parseCSV(text);
-    console.log('Parsed rows count:', rows.length, 'Keys:', rows.length ? Object.keys(rows[0]) : 'none');
+    console.log("Headers found:", headers); console.log("Parsed rows count:", rows.length, "Keys:", rows.length ? Object.keys(rows[0]) : "none");
     const chapters = parseSyllabus(rows);
     if (!chapters.length) { body.innerHTML = '<p style="color:var(--ink-3);font-size:13px;padding:1rem 0">No syllabus data found.</p>'; return; }
     body.innerHTML = chapters.map(ch => `
