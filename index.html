@@ -168,28 +168,46 @@ function parseCSV(text) {
 }
 
 function parseSyllabus(rows) {
+  // Debug: log first few rows to console so we can see the structure
+  console.log('Syllabus rows sample:', rows.slice(0, 5));
+
   const chapters = [];
   let current = null;
 
   for (const row of rows) {
-    // Headers are: chapter, topic / activity, type, notes / links
     const chapterCol = (row['chapter'] || '').trim();
     const topic      = (row['topic / activity'] || '').trim();
     const type       = (row['type'] || '').trim().toUpperCase();
     const notes      = (row['notes / links'] || '').trim();
 
-    // Chapter header row: topic matches "1. Sissejuhatus" pattern, type & notes empty
-    const chMatch = topic.match(/^(\d+)\.\s*(.+)/);
-    if (chMatch && !type && !notes) {
+    // Chapter header: could be in chapterCol ("1. Sissejuhatus") or topic col
+    const candidate = chapterCol || topic;
+    const chMatch = candidate.match(/^(\d+)\.\s*(.+)/);
+    if (chMatch && !type && !notes && !topic) {
+      // chapter header in column A, topic/activity empty
       current = { num: chMatch[1], title: chMatch[2].trim(), items: [] };
       chapters.push(current);
       continue;
     }
+    if (chMatch && !type && !notes && chapterCol === candidate) {
+      // chapter header in column A even if topic has something
+      current = { num: chMatch[1], title: chMatch[2].trim(), items: [] };
+      chapters.push(current);
+      continue;
+    }
+    // Chapter header in topic column
+    const topicMatch = topic.match(/^(\d+)\.\s*(.+)/);
+    if (topicMatch && !type && !notes) {
+      current = { num: topicMatch[1], title: topicMatch[2].trim(), items: [] };
+      chapters.push(current);
+      continue;
+    }
 
-    // Regular topic row
-    if (!topic) continue;
+    // Regular topic row — use topic col, fall back to chapterCol
+    const label = topic || chapterCol;
+    if (!label) continue;
     if (!current) { current = { num: '', title: 'Topics', items: [] }; chapters.push(current); }
-    current.items.push({ topic, type, notes });
+    current.items.push({ topic: label, type, notes });
   }
   return chapters;
 }
