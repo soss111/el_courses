@@ -170,20 +170,26 @@ function parseCSV(text) {
 function parseSyllabus(rows) {
   const chapters = [];
   let current = null;
+
   for (const row of rows) {
-    const chNum = row['chapter'] || row['a'] || '';
-    const topic = row['topic / activity'] || row['topic'] || row['b'] || '';
-    const type  = (row['type'] || row['c'] || '').trim().toUpperCase();
-    const notes = row['notes / links'] || row['notes'] || row['d'] || '';
-    if (!topic) continue;
-    // detect chapter header rows (merged cells come through as topic with no type)
-    if (topic.match(/^\d+\.\s/)) {
-      current = { title: topic, items: [] };
+    // Headers are: chapter, topic / activity, type, notes / links
+    const chapterCol = (row['chapter'] || '').trim();
+    const topic      = (row['topic / activity'] || '').trim();
+    const type       = (row['type'] || '').trim().toUpperCase();
+    const notes      = (row['notes / links'] || '').trim();
+
+    // Chapter header row: topic matches "1. Sissejuhatus" pattern, type & notes empty
+    const chMatch = topic.match(/^(\d+)\.\s*(.+)/);
+    if (chMatch && !type && !notes) {
+      current = { num: chMatch[1], title: chMatch[2].trim(), items: [] };
       chapters.push(current);
-    } else {
-      if (!current) { current = { title: 'Topics', items: [] }; chapters.push(current); }
-      current.items.push({ topic, type, notes });
+      continue;
     }
+
+    // Regular topic row
+    if (!topic) continue;
+    if (!current) { current = { num: '', title: 'Topics', items: [] }; chapters.push(current); }
+    current.items.push({ topic, type, notes });
   }
   return chapters;
 }
@@ -284,7 +290,7 @@ async function openModal(c) {
     if (!chapters.length) { body.innerHTML = '<p style="color:var(--ink-3);font-size:13px;padding:1rem 0">No syllabus data found.</p>'; return; }
     body.innerHTML = chapters.map(ch => `
       <div class="chapter">
-        <div class="ch-title">${ch.title}</div>
+        <div class="ch-title">${ch.num ? `<span class="ch-num">${ch.num}</span>` : ''}${ch.title.replace(/^\d+\.\s*/,'')}</div>
         ${ch.items.map(item => `
           <div class="topic-row">
             <span class="topic-text">${item.topic}</span>
