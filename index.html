@@ -176,9 +176,9 @@ function parseSyllabus(rows) {
 
   for (const row of rows) {
     const chapterCol = (row['chapter'] || '').trim();
-    const topic      = (row['topic / activity'] || '').trim();
+    const topic      = (row['activity'] || '').trim();
     const type       = (row['type'] || '').trim().toUpperCase();
-    const notes      = (row['notes / links'] || '').trim();
+    const notes      = (row['links'] || '').trim();
 
     // Chapter header: could be in chapterCol ("1. Sissejuhatus") or topic col
     const candidate = chapterCol || topic;
