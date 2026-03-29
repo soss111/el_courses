@@ -303,7 +303,9 @@ async function openModal(c) {
   }
   try {
     const text = await fetchCSV(gid);
+    console.log('Raw CSV (first 500 chars):', text.substring(0, 500));
     const rows = parseCSV(text);
+    console.log('Parsed rows count:', rows.length, 'Keys:', rows.length ? Object.keys(rows[0]) : 'none');
     const chapters = parseSyllabus(rows);
     if (!chapters.length) { body.innerHTML = '<p style="color:var(--ink-3);font-size:13px;padding:1rem 0">No syllabus data found.</p>'; return; }
     body.innerHTML = chapters.map(ch => `
